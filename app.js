@@ -65,7 +65,6 @@ const homeScreen = document.getElementById("homeScreen");
 const sightWordScreen = document.getElementById("sightWordScreen");
 const startSightWordBtn = document.getElementById("startSightWord");
 const backHomeBtn = document.getElementById("backHome");
-const skipBtn = document.getElementById("skipBtn");
 const nextBtn = document.getElementById("nextBtn");
 const speakBtn = document.getElementById("speakBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
@@ -235,7 +234,6 @@ function finishGame() {
   targetWordEl.classList.remove("target-word-hidden");
   speakBtn.textContent = "Hear Word";
   speakBtn.disabled = true;
-  skipBtn.disabled = true;
   nextBtn.classList.add("hidden");
   clearFeedback();
   resultSummaryEl.textContent = `You scored ${state.score} points with a best streak of ${state.bestStreak}.`;
@@ -260,7 +258,6 @@ function createRound() {
   targetWordEl.classList.add("target-word-hidden");
   speakBtn.textContent = "Hear Word";
   speakBtn.disabled = false;
-  skipBtn.disabled = false;
   nextBtn.classList.add("hidden");
   choicesEl.innerHTML = "";
 
@@ -302,7 +299,6 @@ function handleChoice(selectedWord, buttonEl) {
     feedbackEl.classList.add("win");
     setChoiceButtonsDisabled(true);
     speakBtn.disabled = true;
-    skipBtn.disabled = true;
     burstCelebrate();
     playSuccessJingle();
     window.setTimeout(() => speakWord(state.targetWord), 250);
@@ -320,7 +316,6 @@ function handleChoice(selectedWord, buttonEl) {
     setChoiceButtonsDisabled(true);
     speakBtn.disabled = false;
     speakBtn.textContent = "Hear Again";
-    skipBtn.disabled = true;
     nextBtn.classList.remove("hidden");
     feedbackEl.textContent = `${pickOne(LOSS_MESSAGES)} This word is "${state.targetWord}".`;
     feedbackEl.classList.remove("win");
@@ -347,25 +342,6 @@ playAgainBtn.addEventListener("click", startGame);
 
 backHomeBtn.addEventListener("click", () => {
   showScreen(homeScreen);
-});
-
-skipBtn.addEventListener("click", () => {
-  if (!state.acceptingInput) {
-    return;
-  }
-
-  state.acceptingInput = false;
-  state.awaitingNext = false;
-  state.streak = 0;
-  feedbackEl.textContent = "Skipped. Let's hear a new word.";
-  feedbackEl.classList.remove("win");
-  feedbackEl.classList.add("lose");
-  setChoiceButtonsDisabled(true);
-  speakBtn.disabled = true;
-  skipBtn.disabled = true;
-  nextBtn.classList.add("hidden");
-  updateHud();
-  goToNextRound(850);
 });
 
 nextBtn.addEventListener("click", () => {
