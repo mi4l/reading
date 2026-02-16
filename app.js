@@ -191,7 +191,7 @@ function createRound() {
   state.targetWord = targetWord;
   state.choices = choices;
 
-  targetWordEl.textContent = 'Tap "Hear Word"';
+  targetWordEl.textContent = "";
   targetWordEl.classList.add("target-word-hidden");
   speakBtn.textContent = "Hear Word";
   choicesEl.innerHTML = "";

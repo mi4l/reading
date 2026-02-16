@@ -24,18 +24,11 @@ body {
 
 body {
   position: relative;
-  background: linear-gradient(160deg, #fffaf0 10%, #f6ffff 90%);
+  background: #ffffff;
 }
 
 .page-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255, 174, 188, 0.75), transparent 34%),
-    radial-gradient(circle at 85% 14%, rgba(160, 231, 229, 0.75), transparent 36%),
-    radial-gradient(circle at 20% 82%, rgba(180, 248, 200, 0.68), transparent 40%),
-    radial-gradient(circle at 86% 80%, rgba(251, 231, 198, 0.72), transparent 39%);
+  display: none;
 }
 
 .app-shell {
@@ -207,6 +200,7 @@ body {
   font-size: clamp(2.6rem, 10vw, 5rem);
   line-height: 1;
   text-transform: lowercase;
+  min-height: 1em;
 }
 
 .target-word-hidden {
