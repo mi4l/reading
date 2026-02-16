@@ -58,6 +58,7 @@ const state = {
 };
 
 let deferredInstallPrompt = null;
+let successAudioContext = null;
 
 const homeScreen = document.getElementById("homeScreen");
 const sightWordScreen = document.getElementById("sightWordScreen");
@@ -143,6 +144,53 @@ function speakWord(word) {
   utterance.pitch = 1.2;
   speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
+}
+
+function getSuccessAudioContext() {
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) {
+    return null;
+  }
+
+  if (!successAudioContext) {
+    successAudioContext = new AudioContextCtor();
+  }
+
+  if (successAudioContext.state === "suspended") {
+    successAudioContext.resume().catch(() => {});
+  }
+
+  return successAudioContext;
+}
+
+function playSuccessJingle() {
+  const audioContext = getSuccessAudioContext();
+  if (!audioContext) {
+    return;
+  }
+
+  const notes = [523.25, 659.25, 783.99];
+  const noteLength = 0.12;
+  const startAt = audioContext.currentTime + 0.01;
+
+  notes.forEach((frequency, index) => {
+    const noteStart = startAt + index * noteLength;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(frequency, noteStart);
+
+    gainNode.gain.setValueAtTime(0.0001, noteStart);
+    gainNode.gain.exponentialRampToValueAtTime(0.11, noteStart + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, noteStart + noteLength);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start(noteStart);
+    oscillator.stop(noteStart + noteLength);
+  });
 }
 
 function showFoundWord() {
@@ -233,8 +281,9 @@ function handleChoice(selectedWord, buttonEl) {
     feedbackEl.classList.remove("lose");
     feedbackEl.classList.add("win");
     burstCelebrate();
-    speakWord(state.targetWord);
-    goToNextRound(900);
+    playSuccessJingle();
+    window.setTimeout(() => speakWord(state.targetWord), 250);
+    goToNextRound(1000);
   } else {
     state.streak = 0;
     buttonEl.classList.add("wrong");
