@@ -54,6 +54,7 @@ const state = {
   targetWord: "",
   hasHeardWord: false,
   awaitingNext: false,
+  reviewOutcome: null,
   choices: [],
   acceptingInput: true,
 };
@@ -228,6 +229,7 @@ function goToNextRound(delayMs) {
 function finishGame() {
   state.acceptingInput = false;
   state.awaitingNext = false;
+  state.reviewOutcome = null;
   state.targetWord = "";
   choicesEl.innerHTML = "";
   targetWordEl.textContent = "Great Reading!";
@@ -244,6 +246,7 @@ function createRound() {
   state.acceptingInput = true;
   state.hasHeardWord = false;
   state.awaitingNext = false;
+  state.reviewOutcome = null;
   clearFeedback();
   resultPanelEl.classList.add("hidden");
 
@@ -289,23 +292,27 @@ function handleChoice(selectedWord, buttonEl) {
 
   if (isCorrect) {
     state.acceptingInput = false;
+    state.awaitingNext = true;
+    state.reviewOutcome = "win";
     showFoundWord();
     state.score += 10;
     state.streak += 1;
     state.bestStreak = Math.max(state.bestStreak, state.streak);
     buttonEl.classList.add("correct");
-    feedbackEl.textContent = pickOne(WIN_MESSAGES);
+    feedbackEl.textContent = `${pickOne(WIN_MESSAGES)} This word is "${state.targetWord}".`;
     feedbackEl.classList.remove("lose");
     feedbackEl.classList.add("win");
     setChoiceButtonsDisabled(true);
-    speakBtn.disabled = true;
+    speakBtn.disabled = false;
+    speakBtn.textContent = "Hear Again";
+    nextBtn.classList.remove("hidden");
     burstCelebrate();
     playSuccessJingle();
     window.setTimeout(() => speakWord(state.targetWord), 250);
-    goToNextRound(1000);
   } else {
     state.acceptingInput = false;
     state.awaitingNext = true;
+    state.reviewOutcome = "lose";
     state.streak = 0;
     buttonEl.classList.add("wrong");
     const correctButton = findChoiceButton(state.targetWord);
@@ -350,6 +357,7 @@ nextBtn.addEventListener("click", () => {
   }
 
   state.awaitingNext = false;
+  state.reviewOutcome = null;
   nextBtn.classList.add("hidden");
   goToNextRound(80);
 });
@@ -367,8 +375,13 @@ speakBtn.addEventListener("click", () => {
   speakBtn.textContent = "Hear Again";
   if (state.awaitingNext) {
     feedbackEl.textContent = `This word is "${state.targetWord}".`;
-    feedbackEl.classList.remove("win");
-    feedbackEl.classList.add("lose");
+    if (state.reviewOutcome === "win") {
+      feedbackEl.classList.remove("lose");
+      feedbackEl.classList.add("win");
+    } else {
+      feedbackEl.classList.remove("win");
+      feedbackEl.classList.add("lose");
+    }
   } else {
     feedbackEl.textContent = "Now tap the matching word.";
     feedbackEl.classList.remove("lose");
