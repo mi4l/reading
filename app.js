@@ -53,6 +53,7 @@ const state = {
   bestStreak: 0,
   targetWord: "",
   hasHeardWord: false,
+  awaitingNext: false,
   choices: [],
   acceptingInput: true,
 };
@@ -65,6 +66,7 @@ const sightWordScreen = document.getElementById("sightWordScreen");
 const startSightWordBtn = document.getElementById("startSightWord");
 const backHomeBtn = document.getElementById("backHome");
 const skipBtn = document.getElementById("skipBtn");
+const nextBtn = document.getElementById("nextBtn");
 const speakBtn = document.getElementById("speakBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const choicesEl = document.getElementById("choices");
@@ -202,6 +204,16 @@ function showFoundWord() {
   targetWordEl.classList.remove("target-word-hidden");
 }
 
+function setChoiceButtonsDisabled(disabled) {
+  Array.from(choicesEl.children).forEach((node) => {
+    node.disabled = disabled;
+  });
+}
+
+function findChoiceButton(word) {
+  return Array.from(choicesEl.children).find((node) => node.textContent === word) || null;
+}
+
 function goToNextRound(delayMs) {
   window.setTimeout(() => {
     state.round += 1;
@@ -216,11 +228,15 @@ function goToNextRound(delayMs) {
 
 function finishGame() {
   state.acceptingInput = false;
+  state.awaitingNext = false;
   state.targetWord = "";
   choicesEl.innerHTML = "";
   targetWordEl.textContent = "Great Reading!";
   targetWordEl.classList.remove("target-word-hidden");
   speakBtn.textContent = "Hear Word";
+  speakBtn.disabled = true;
+  skipBtn.disabled = true;
+  nextBtn.classList.add("hidden");
   clearFeedback();
   resultSummaryEl.textContent = `You scored ${state.score} points with a best streak of ${state.bestStreak}.`;
   resultPanelEl.classList.remove("hidden");
@@ -229,6 +245,7 @@ function finishGame() {
 function createRound() {
   state.acceptingInput = true;
   state.hasHeardWord = false;
+  state.awaitingNext = false;
   clearFeedback();
   resultPanelEl.classList.add("hidden");
 
@@ -242,6 +259,9 @@ function createRound() {
   targetWordEl.textContent = "";
   targetWordEl.classList.add("target-word-hidden");
   speakBtn.textContent = "Hear Word";
+  speakBtn.disabled = false;
+  skipBtn.disabled = false;
+  nextBtn.classList.add("hidden");
   choicesEl.innerHTML = "";
 
   choices.forEach((word) => {
@@ -280,17 +300,32 @@ function handleChoice(selectedWord, buttonEl) {
     feedbackEl.textContent = pickOne(WIN_MESSAGES);
     feedbackEl.classList.remove("lose");
     feedbackEl.classList.add("win");
+    setChoiceButtonsDisabled(true);
+    speakBtn.disabled = true;
+    skipBtn.disabled = true;
     burstCelebrate();
     playSuccessJingle();
     window.setTimeout(() => speakWord(state.targetWord), 250);
     goToNextRound(1000);
   } else {
+    state.acceptingInput = false;
+    state.awaitingNext = true;
     state.streak = 0;
     buttonEl.classList.add("wrong");
-    buttonEl.disabled = true;
-    feedbackEl.textContent = `${pickOne(LOSS_MESSAGES)} Try another card.`;
+    const correctButton = findChoiceButton(state.targetWord);
+    if (correctButton) {
+      correctButton.classList.add("correct");
+    }
+    showFoundWord();
+    setChoiceButtonsDisabled(true);
+    speakBtn.disabled = false;
+    speakBtn.textContent = "Hear Again";
+    skipBtn.disabled = true;
+    nextBtn.classList.remove("hidden");
+    feedbackEl.textContent = `${pickOne(LOSS_MESSAGES)} This word is "${state.targetWord}".`;
     feedbackEl.classList.remove("win");
     feedbackEl.classList.add("lose");
+    speakWord(state.targetWord);
   }
 
   updateHud();
@@ -320,24 +355,49 @@ skipBtn.addEventListener("click", () => {
   }
 
   state.acceptingInput = false;
+  state.awaitingNext = false;
   state.streak = 0;
   feedbackEl.textContent = "Skipped. Let's hear a new word.";
   feedbackEl.classList.remove("win");
   feedbackEl.classList.add("lose");
+  setChoiceButtonsDisabled(true);
+  speakBtn.disabled = true;
+  skipBtn.disabled = true;
+  nextBtn.classList.add("hidden");
   updateHud();
   goToNextRound(850);
 });
 
+nextBtn.addEventListener("click", () => {
+  if (!state.awaitingNext) {
+    return;
+  }
+
+  state.awaitingNext = false;
+  nextBtn.classList.add("hidden");
+  goToNextRound(80);
+});
+
 speakBtn.addEventListener("click", () => {
-  if (!state.acceptingInput || !state.targetWord) {
+  if (!state.targetWord) {
+    return;
+  }
+
+  if (!state.acceptingInput && !state.awaitingNext) {
     return;
   }
 
   state.hasHeardWord = true;
   speakBtn.textContent = "Hear Again";
-  feedbackEl.textContent = "Now tap the matching word.";
-  feedbackEl.classList.remove("lose");
-  feedbackEl.classList.add("win");
+  if (state.awaitingNext) {
+    feedbackEl.textContent = `This word is "${state.targetWord}".`;
+    feedbackEl.classList.remove("win");
+    feedbackEl.classList.add("lose");
+  } else {
+    feedbackEl.textContent = "Now tap the matching word.";
+    feedbackEl.classList.remove("lose");
+    feedbackEl.classList.add("win");
+  }
   speakWord(state.targetWord);
 });
 
