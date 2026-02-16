@@ -61,6 +61,7 @@ const state = {
 
 let deferredInstallPrompt = null;
 let successAudioContext = null;
+let preferredEnglishVoice = null;
 
 const homeScreen = document.getElementById("homeScreen");
 const sightWordScreen = document.getElementById("sightWordScreen");
@@ -133,6 +134,76 @@ function clearFeedback() {
   feedbackEl.classList.remove("win", "lose");
 }
 
+function scoreVoiceForClarity(voice) {
+  const lang = (voice.lang || "").toLowerCase();
+  const name = (voice.name || "").toLowerCase();
+  let score = 0;
+
+  if (lang.startsWith("en-us")) {
+    score += 120;
+  } else if (lang.startsWith("en")) {
+    score += 40;
+  } else {
+    return -1;
+  }
+
+  const preferredNames = [
+    "google us english",
+    "samantha",
+    "karen",
+    "allison",
+    "ava",
+    "victoria",
+    "zira",
+    "aria",
+    "jenny",
+    "guy",
+    "davis",
+  ];
+
+  preferredNames.forEach((term) => {
+    if (name.includes(term)) {
+      score += 20;
+    }
+  });
+
+  if (voice.localService) {
+    score += 8;
+  }
+
+  if (name.includes("neural") || name.includes("enhanced") || name.includes("premium")) {
+    score += 6;
+  }
+
+  return score;
+}
+
+function refreshPreferredEnglishVoice() {
+  if (!("speechSynthesis" in window)) {
+    preferredEnglishVoice = null;
+    return;
+  }
+
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) {
+    preferredEnglishVoice = null;
+    return;
+  }
+
+  let bestVoice = null;
+  let bestScore = -1;
+
+  voices.forEach((voice) => {
+    const score = scoreVoiceForClarity(voice);
+    if (score > bestScore) {
+      bestScore = score;
+      bestVoice = voice;
+    }
+  });
+
+  preferredEnglishVoice = bestVoice;
+}
+
 function speakWord(word) {
   if (!("speechSynthesis" in window)) {
     feedbackEl.textContent = "Audio is not available on this device.";
@@ -141,9 +212,20 @@ function speakWord(word) {
     return;
   }
 
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.rate = 0.78;
-  utterance.pitch = 1.2;
+  if (!preferredEnglishVoice) {
+    refreshPreferredEnglishVoice();
+  }
+
+  const utterance = new SpeechSynthesisUtterance(String(word).trim().toLowerCase());
+  utterance.lang = "en-US";
+  utterance.rate = 0.66;
+  utterance.pitch = 1.0;
+  utterance.volume = 1;
+  if (preferredEnglishVoice) {
+    utterance.voice = preferredEnglishVoice;
+    utterance.lang = preferredEnglishVoice.lang || "en-US";
+  }
+
   speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
 }
@@ -389,6 +471,11 @@ speakBtn.addEventListener("click", () => {
   }
   speakWord(state.targetWord);
 });
+
+if ("speechSynthesis" in window) {
+  refreshPreferredEnglishVoice();
+  speechSynthesis.addEventListener("voiceschanged", refreshPreferredEnglishVoice);
+}
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
