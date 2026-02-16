@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FFAEBC" />
+    <meta name="description" content="Playful reading games for early readers." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <title>StarSprout Reading</title>
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="top-bar">
+        <div>
+          <h1 class="brand">StarSprout Reading</h1>
+          <p class="subtitle">Choose a game and start reading magic.</p>
+        </div>
+        <button id="installBtn" class="secondary-btn hidden" type="button">Install App</button>
+      </header>
+
+      <section id="homeScreen" class="screen active" aria-label="Game Selection">
+        <div class="cards-grid">
+          <article class="game-card available">
+            <h2>Sight Word Splash</h2>
+            <p>Tap the matching word as fast as you can.</p>
+            <button id="startSightWord" class="primary-btn" type="button">Play</button>
+          </article>
+
+          <article class="game-card locked">
+            <h2>Rhyme Race</h2>
+            <p>Match words that rhyme.</p>
+            <span class="tag">Coming Soon</span>
+          </article>
+
+          <article class="game-card locked">
+            <h2>Letter Quest</h2>
+            <p>Find letters and sounds.</p>
+            <span class="tag">Coming Soon</span>
+          </article>
+
+          <article class="game-card locked">
+            <h2>Story Build</h2>
+            <p>Make tiny stories with sight words.</p>
+            <span class="tag">Coming Soon</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="sightWordScreen" class="screen" aria-label="Sight Word Splash">
+        <div class="game-header">
+          <button id="backHome" class="secondary-btn" type="button">Back</button>
+          <div class="stats" aria-live="polite">
+            <span>Score: <strong id="scoreValue">0</strong></span>
+            <span>Streak: <strong id="streakValue">0</strong></span>
+            <span>Round: <strong id="roundValue">1</strong>/10</span>
+          </div>
+        </div>
+
+        <article class="challenge-panel">
+          <div id="burstLayer" class="burst-layer" aria-hidden="true"></div>
+          <p class="label">Listen, then find the word:</p>
+          <p id="targetWord" class="target-word target-word-hidden">Tap "Hear Word"</p>
+          <div class="actions-row">
+            <button id="speakBtn" class="secondary-btn" type="button">Hear Word</button>
+            <button id="skipBtn" class="secondary-btn" type="button">Skip</button>
+          </div>
+          <p id="feedback" class="feedback" aria-live="assertive"></p>
+        </article>
+
+        <div id="choices" class="choices-grid" role="group" aria-label="Word choices"></div>
+
+        <div id="resultPanel" class="result-panel hidden" aria-live="polite">
+          <h3>Nice Work!</h3>
+          <p id="resultSummary"></p>
+          <button id="playAgainBtn" class="primary-btn" type="button">Play Again</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
